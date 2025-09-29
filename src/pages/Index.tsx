@@ -3,6 +3,7 @@ import { Project, Task, Notification, FilterCriteria, Analytics, NewProject, Vie
 import { DashboardView } from '@/components/dashboard-view';
 import { ProjectCard } from '@/components/project-card';
 import { ProjectModal } from '@/components/project-modal';
+import { ProjectDetailModal } from '@/components/project-detail-modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -197,6 +198,21 @@ const Index = () => {
     toast({
       title: "Project archived",
       description: "Project has been moved to archive.",
+    });
+  }, [toast]);
+
+  const updateProjectProgress = useCallback((projectId: number, newProgress: number) => {
+    setProjects(prev => prev.map(p =>
+      p.id === projectId ? {
+        ...p,
+        progress: newProgress,
+        lastActivity: new Date().toISOString().split('T')[0],
+        status: newProgress === 100 ? 'completed' : p.status === 'completed' ? 'active' : p.status
+      } : p
+    ));
+    toast({
+      title: "Progress updated",
+      description: `Project progress updated to ${newProgress}%.`,
     });
   }, [toast]);
 
@@ -451,7 +467,11 @@ const Index = () => {
                   {filteredAndSearchedProjects
                     .filter(project => project.status === status)
                     .map(project => (
-                      <Card key={project.id} className="cursor-pointer hover:shadow-soft transition-all border-border/30">
+                      <Card 
+                        key={project.id} 
+                        className="cursor-pointer hover:shadow-soft transition-all border-border/30"
+                        onClick={() => setSelectedProject(project)}
+                      >
                         <CardContent className="p-4 space-y-3">
                           <h4 className="font-medium text-sm text-foreground line-clamp-2">
                             {project.title}
@@ -494,6 +514,14 @@ const Index = () => {
           isOpen={showAddForm}
           onClose={() => setShowAddForm(false)}
           onSubmit={handleCreateProject}
+        />
+
+        {/* Project Detail Modal */}
+        <ProjectDetailModal
+          project={selectedProject}
+          isOpen={!!selectedProject}
+          onClose={() => setSelectedProject(null)}
+          onUpdateProgress={updateProjectProgress}
         />
       </div>
     </div>
